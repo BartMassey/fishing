@@ -69,7 +69,11 @@ def game():
     read_score_file()
     print("High score to date: ", high_score)
     while True:
-        command = input("Fish! ").split()
+        try:
+            command = input("Fish! ").split()
+        except EOFError:
+            print()
+            break
         if command == ["quit"]:
             break
         elif command in [["cast"], []]:
