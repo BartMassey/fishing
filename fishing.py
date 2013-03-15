@@ -44,23 +44,28 @@ def write_score_file(high_score):
     score_file.write(str(high_score) + "\n")
     score_file.close()
 
+score = 0
+high_score = read_score_file()
+
+def one_cast():
+    global score, high_score
+    cast_score = cast()
+    score += cast_score
+    if cast_score > 0:
+        print("Your score is now", score)
+        if score > high_score:
+            print("A new high score!")
+            high_score = score
+            write_score_file(high_score)
+
 def game():
-    score = 0
-    high_score = read_score_file()
     print("High score to date: ", high_score)
     while True:
-        command = input("Fish! ")
-        if command == "quit":
+        command = input("Fish! ").split()
+        if command == ["quit"]:
             break
-        elif command in ["cast", ""]:
-            cast_score = cast()
-            score += cast_score
-            if cast_score > 0:
-                print("Your score is now", score)
-            if score > high_score:
-                print("A new high score!")
-                high_score = score
-                write_score_file(high_score)
+        elif command in [["cast"], []]:
+            one_cast()
         else:
             print("I do not understand you fully.")
         print()
