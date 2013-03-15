@@ -31,9 +31,13 @@ def cast():
 score_file_name = "scores.txt"
 
 def read_score_file():
-    score_file = open(score_file_name, "r+")
-    high_score = int(score_file.readline())
-    score_file.close()
+    try:
+        score_file = open(score_file_name, "r+")
+        high_score = int(score_file.readline())
+        score_file.close()
+    except IOError:
+        high_score = 0
+        write_score_file(high_score)
     return high_score
 
 def write_score_file(high_score):
