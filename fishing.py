@@ -29,18 +29,21 @@ def cast():
 
 score_file_name = "scores.txt"
 
-# Current player's current score.
+# Current fisher.
+fisher = None
+# Current fisher's current score.
 score = 0
 # All-time high score.
 high_score = 0
-# Current user.
-user = None
 
 def read_score_file():
-    global high_score
+    global high_score, high_score_fisher
     try:
         score_file = open(score_file_name, "r+")
-        high_score = int(score_file.readline())
+        score_entry = score_file.readline().split()
+        high_score = int(score_entry[0])
+        if len(score_entry) > 1:
+            high_score_fisher = score_entry[1]
         score_file.close()
     except IOError:
         high_score = 0
@@ -52,8 +55,8 @@ def write_score_file():
     score_file.close()
 
 def one_cast():
-    if user == None:
-        print("Use the \"user\" command before fishing.")
+    if fisher == None:
+        print("Use the \"fisher\" command before fishing.")
         return
     global score, high_score
     cast_score = cast()
@@ -78,13 +81,13 @@ def game():
             break
         elif command in [["cast"], []]:
             one_cast()
-        elif command[0] == "user":
+        elif command[0] == "fisher":
             if len(command) == 2:
-                global user
-                user = command[1]
+                global fisher
+                fisher = command[1]
             else:
-                print("Say \"user\" and your username. " +
-                      "For example, \"user alice\".")
+                print("Say \"fisher\" and your fishername. " +
+                      "For example, \"fisher alice\".")
         else:
             print("I do not understand you fully.")
         print()
