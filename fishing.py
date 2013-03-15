@@ -29,23 +29,25 @@ def cast():
 
 score_file_name = "scores.txt"
 
+# Current player's current score.
+score = 0
+# All-time high score
+high_score = 0
+
 def read_score_file():
+    global high_score
     try:
         score_file = open(score_file_name, "r+")
         high_score = int(score_file.readline())
         score_file.close()
     except IOError:
         high_score = 0
-        write_score_file(high_score)
-    return high_score
+        write_score_file()
 
-def write_score_file(high_score):
+def write_score_file():
     score_file = open(score_file_name, "w")
     score_file.write(str(high_score) + "\n")
     score_file.close()
-
-score = 0
-high_score = read_score_file()
 
 def one_cast():
     global score, high_score
@@ -56,9 +58,10 @@ def one_cast():
         if score > high_score:
             print("A new high score!")
             high_score = score
-            write_score_file(high_score)
+            write_score_file()
 
 def game():
+    read_score_file()
     print("High score to date: ", high_score)
     while True:
         command = input("Fish! ").split()
