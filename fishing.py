@@ -1,8 +1,12 @@
 # Copyright © 2013 Bart Massey
+# [This program is licensed under the "MIT License"]
+# Please see the file COPYING in the source
+# distribution of this software for license terms.
+
 # Simple fishing game
 
 # Player repeatedly casts and gets fish
-# with different likelihoods and point values
+# with different likelihoods and point values.
 
 import random
 
