@@ -18,13 +18,12 @@ catches = [
 
 def cast():
     selection = random.randrange(100)
-    cumulative = 0
     for c in catches:
-        if c[1] + cumulative > selection:
+        if selection < c[1]:
             print("You reel in a", c[0],
                   "for", c[2], "points!")
             return c[2]
-        cumulative += c[1]
+        selection -= c[1]
     print("After a while, you reel in, empty-handed.")
     return 0
 
