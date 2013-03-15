@@ -31,8 +31,10 @@ score_file_name = "scores.txt"
 
 # Current player's current score.
 score = 0
-# All-time high score
+# All-time high score.
 high_score = 0
+# Current user.
+user = None
 
 def read_score_file():
     global high_score
@@ -50,6 +52,9 @@ def write_score_file():
     score_file.close()
 
 def one_cast():
+    if user == None:
+        print("Use the \"user\" command before fishing.")
+        return
     global score, high_score
     cast_score = cast()
     score += cast_score
@@ -69,6 +74,13 @@ def game():
             break
         elif command in [["cast"], []]:
             one_cast()
+        elif command[0] == "user":
+            if len(command) == 2:
+                global user
+                user = command[1]
+            else:
+                print("Say \"user\" and your username. " +
+                      "For example, \"user alice\".")
         else:
             print("I do not understand you fully.")
         print()
