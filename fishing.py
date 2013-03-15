@@ -88,6 +88,9 @@ def game():
         else:
             print("I do not understand you fully.")
         print()
+    print()
+    print("Your final score this session:", score)
+    print("Thanks for fishing!")
 
 # Testing function
 def test():
