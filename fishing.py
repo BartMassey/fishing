@@ -14,8 +14,8 @@ random.seed()
 # username to score, stored in a "shelf".
 users = shelve.open("fishing")
 
-# Register a new, legal username
 def register(username):
+    "Register a new, legal username."
     for c in username:
         if not c.isalpha() and not c.isdigit() and not c in "_-":
             print("illegal character in username")
@@ -29,8 +29,8 @@ def register(username):
 # The username of the current fisher
 fisher = None
 
-# Set the fisher to an existing username
 def fish(username):
+    "Set the fisher to an existing username."
     global fisher
     if not (username in users):
         print("username unknown")
@@ -53,9 +53,11 @@ fishes = (
     ("Salmon", 4, 500),
     ("Gold Boot", 1, 5000) )
 
-# Get the result of a cast. Returns a tuple of fish
-# description and cast score.
 def cast_result():
+    """
+    Get the result of a cast. Returns a tuple of fish
+    description and cast score.
+    """
     catch = random.randrange(100)
     for (fish, percent, score) in fishes:
         catch -= percent
@@ -65,8 +67,8 @@ def cast_result():
             return ("a " + fish, score)
     raise AssertionError("internal error: bad fishing cast")
 
-# Cast the fisher's rod
 def cast():
+    "Cast the fisher's rod."
     global fisher
     if fisher == None:
         print('Use the "fish" command to choose a fisher.')
@@ -82,8 +84,8 @@ def cast():
     users.sync()
     fisher_score()
 
-# Show everyone's score
 def scores():
+    "Show everyone's score."
     global fisher
     if fisher != None:
         fisher_score()
@@ -92,14 +94,14 @@ def scores():
     for u in users:
         print(u + ": " + str(users[u]))
 
-# Quit the game
 def quit():
+    "Quit the game."
     scores()
     users.close()
     exit()
 
-# Show help
 def help():
+    "Show help."
     print("""
     register <username>: Register a new fisher named username
     fish <username>: Start username fishing
@@ -109,8 +111,8 @@ def help():
     help: This help
     """)
 
-# Test the fishing algorithm
 def test():
+    "Test the fishing algorithm."
     counts = {}
     for i in range(10000):
         (fish, score) = cast_result()
