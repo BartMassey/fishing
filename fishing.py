@@ -1,116 +1,155 @@
-# Copyright © 2013 Bart Massey
-# [This program is licensed under the "MIT License"]
-# Please see the file COPYING in the source
-# distribution of this software for license terms.
-
-# Simple fishing game
-
-# Player repeatedly casts and gets fish
-# with different likelihoods and point values.
+# Copyright (c) 2011 Bart Massey
+# A Fishing Game
 
 import random
+import shelve
+from sys import exit
 
-score_file_name = "scores.txt"
+# Initialize the PRNG
+random.seed()
 
-catches = [
-    ("minnow", 40, 2),
-    ("haddock", 10, 10),
-    ("lobster", 5, 20),
-    ("golden boot", 1, 100) ]
+# The scorefile is kept as a dictionary mapping
+# username to score, stored in a "shelf".
+users = shelve.open("fishing")
 
-# Current fisher.
+# Register a new, legal username
+def register(username):
+    for c in username:
+        if not c.isalpha() and not c.isdigit() and not c in "_-":
+            print("illegal character in username")
+            return
+    if username in users:
+        print("username already registered")
+        return
+    users[username] = 0
+    users.sync()
+
+# The username of the current fisher
 fisher = None
-# Current fisher's current score.
-score = 0
 
-# All-time high score fisher.
-high_score_fisher = None
-# All-time high score.
-high_score = 0
+# Set the fisher to an existing username
+def fish(username):
+    global fisher
+    if not (username in users):
+        print("username unknown")
+        return
+    fisher = username
 
+def fisher_score():
+    global fisher
+    print("Your current score is " + str(users[fisher]))
+
+# Dictionary of fishes keyed by fish and contents
+# a two-tuple indicating the percent probability and
+# the score of that fish.
+fishes = (
+    (None, 20, 0),
+    ("Minnow", 20, 10),
+    ("Bluegill", 30, 30),
+    ("Bass", 15, 100),
+    ("Trout", 10, 200),
+    ("Salmon", 4, 500),
+    ("Gold Boot", 1, 5000) )
+
+# Get the result of a cast. Returns a tuple of fish
+# description and cast score.
+def cast_result():
+    catch = random.randrange(100)
+    for (fish, percent, score) in fishes:
+        catch -= percent
+        if catch < 0:
+            if fish == None:
+                return ("nothing", score)
+            return ("a " + fish, score)
+    raise AssertionError("internal error: bad fishing cast")
+
+# Cast the fisher's rod
 def cast():
-    selection = random.randrange(100)
-    for c in catches:
-        if selection < c[1]:
-            print("You reel in a", c[0],
-                  "for", c[2], "points!")
-            return c[2]
-        selection -= c[1]
-    print("After a while, you reel in, empty-handed.")
-    return 0
-
-def read_score_file():
-    global high_score, high_score_fisher
-    try:
-        score_file = open(score_file_name, "r+")
-        score_entry = score_file.readline().split()
-        high_score = int(score_entry[0])
-        if len(score_entry) > 1:
-            high_score_fisher = score_entry[1]
-        score_file.close()
-    except IOError:
-        high_score = 0
-        write_score_file()
-
-def write_score_file():
+    global fisher
     if fisher == None:
+        print('Use the "fish" command to choose a fisher.')
         return
-    score_file = open(score_file_name, "w")
-    score_file.write(str(high_score) + " " + fisher + "\n")
-    score_file.close()
-
-def one_cast():
-    if fisher == None:
-        print("Use the \"fisher\" command before fishing.")
+    (fish, score) = cast_result()
+    print("You have caught ", end="")
+    if fish == "nothing":
+        print("nothing.")
         return
-    global score, high_score
-    cast_score = cast()
-    score += cast_score
-    if cast_score > 0:
-        print("Your score is now", score)
-        if score > high_score:
-            print("A new high score!")
-            high_score = score
-            write_score_file()
+    print(fish + "!")
+    print("It is worth " + str(score) + " points.")
+    users[fisher] += score
+    users.sync()
+    fisher_score()
 
-def game():
-    read_score_file()
-    if high_score_fisher == None:
-        print("High score to date:", high_score)
-    else:
-        print("High score to date:", high_score, "by", high_score_fisher)
-    print()
-    while True:
-        global fisher
-        if fisher == None:
-            prompt = "Prepare to fish! "
-        else:
-            prompt = "Fish! "
-        try:
-            command = input(prompt).split()
-        except EOFError:
-            print()
-            break
-        if command == ["quit"]:
-            break
-        elif command in [["cast"], []]:
-            one_cast()
-        elif command[0] == "fisher":
-            if len(command) == 2:
-                fisher = command[1]
-            else:
-                print("Say \"fisher\" and your fishername. " +
-                      "For example, \"fisher alice\".")
-        else:
-            print("I do not understand you fully.")
-        print()
-    print()
-    print("Your final score this session:", score)
-    print("Thanks for fishing!")
+# Show everyone's score
+def scores():
+    global fisher
+    if fisher != None:
+        fisher_score()
+        print("")
+    print("All scores:")
+    for u in users:
+        print(u + ": " + str(users[u]))
 
-# Testing function
+# Quit the game
+def quit():
+    scores()
+    users.close()
+    exit()
+
+# Show help
+def help():
+    print("""
+    register <username>: Register a new fisher named username
+    fish <username>: Start username fishing
+    cast: Try to catch a fish
+    scores: Find out everyone's score
+    quit: Quit the game
+    help: This help
+    """)
+
+# Test the fishing algorithm
 def test():
-    for i in range(1000):
-        cast()
+    counts = {}
+    for i in range(10000):
+        (fish, score) = cast_result()
+        if fish in counts:
+            counts[fish] += 1
+        else:
+            counts[fish] = 0
+    for fish in counts:
+        print(fish + ": " + str(counts[fish]))
 
-game()
+# Fishing commands. Each command comes with its argument
+# count and its function.
+commands = { "register" : (2, register),
+             "fish" : (2, fish),
+             "cast" : (1, cast),
+             "scores" : (1, scores),
+             "quit" : (1, quit),
+             "help" : (1, help),
+             "test" : (1, test) }
+
+# The main loop
+print('Fishing! Please enter fishing commands. "help" for help.')
+while True:
+    words = []
+    while words == []:
+        try:
+            cmd = input("> ")
+        except EOFError:
+            print("quit")
+            cmd = "quit"
+        words = cmd.split()
+    if words[0] in commands:
+        (nargs, cmd_fun) = commands[words[0]]
+        if len(words) != nargs:
+            print("Wrong number of arguments to command. Please try again")
+            continue
+        if nargs == 1:
+            cmd_fun()
+        elif nargs == 2:
+            cmd_fun(words[1])
+        else:
+            raise AssertionError("internal error: bogus argument count")
+        continue
+    print("Unknown fishing command. Please try again.")
