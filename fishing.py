@@ -1,5 +1,7 @@
 # Copyright (c) 2011 Bart Massey
 # A Fishing Game
+# This work is available under the "MIT License". Please see the
+# file COPYING in this distribution for license details.
 
 import random
 import shelve
