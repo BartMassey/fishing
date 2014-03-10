@@ -2,7 +2,17 @@
 Copyright &copy; 2014 Bart Massey  
 2014-03-10
 
-A simple fishing game.
+This is a very simple little fishing game that I wrote as a
+class demo with my Intro Programming in Python class in
+2011.
+
+Invoke the game with "python3 fishing.py". When it tells you
+to "Prepare to fish!", say "fisher" and your fisher name,
+for example "fisher Alice".
+
+When the game tells you to "Fish!", you can hit return or
+say "cast" to cast, or you can say "quit" to quit. Your high
+score is tracked.
 
   * When the user starts up the program, it reads commands
     from the user and then executes them.
