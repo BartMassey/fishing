@@ -12,19 +12,20 @@ random.seed()
 
 # The scorefile is kept as a dictionary mapping
 # username to score, stored in a "shelf".
-users = shelve.open("fishing")
+user_scores = shelve.open("fishing")
 
 def register(username):
     "Register a new, legal username."
     for c in username:
-        if not c.isalpha() and not c.isdigit() and not c in "_-":
-            print("illegal character in username")
+        if not (c.isalpha() or c.isdigit() or c in "_-"):
+            print("illegal character in username " + \
+                  "(legal are A-Za-z0-9_-)")
             return
-    if username in users:
+    if username in user_scores:
         print("username already registered")
         return
-    users[username] = 0
-    users.sync()
+    user_scores[username] = 0
+    user_scores.sync()
 
 # The username of the current fisher
 fisher = None
@@ -32,14 +33,14 @@ fisher = None
 def fish(username):
     "Set the fisher to an existing username."
     global fisher
-    if not (username in users):
+    if not (username in user_scores):
         print("username unknown")
         return
     fisher = username
 
 def fisher_score():
     global fisher
-    print("Your current score is " + str(users[fisher]))
+    print("Your current score is " + str(user_scores[fisher]))
 
 # Dictionary of fishes keyed by fish and contents
 # a two-tuple indicating the percent probability and
@@ -62,10 +63,14 @@ def cast_result():
     for (fish, percent, score) in fishes:
         catch -= percent
         if catch < 0:
-            if fish == None:
-                return ("nothing", score)
-            return ("a " + fish, score)
-    raise AssertionError("internal error: bad fishing cast")
+            return (fish, score)
+    assert False
+
+def fish_name(fish):
+    "Return canonical name of a fish."
+    if fish == None:
+        return "nothing"
+    return "a " + fish
 
 def cast():
     "Cast the fisher's rod."
@@ -75,13 +80,13 @@ def cast():
         return
     (fish, score) = cast_result()
     print("You have caught ", end="")
-    if fish == "nothing":
-        print("nothing.")
+    if fish == None:
+        print(fish_name(fish) + ".")
         return
-    print(fish + "!")
+    print("a " + fish_name(fish) + "!")
     print("It is worth " + str(score) + " points.")
-    users[fisher] += score
-    users.sync()
+    user_scores[fisher] += score
+    user_scores.sync()
     fisher_score()
 
 def scores():
@@ -91,13 +96,13 @@ def scores():
         fisher_score()
         print("")
     print("All scores:")
-    for u in users:
-        print(u + ": " + str(users[u]))
+    for u in user_scores:
+        print(u + ": " + str(user_scores[u]))
 
 def quit():
     "Quit the game."
     scores()
-    users.close()
+    user_scores.close()
     exit()
 
 def help():
@@ -114,24 +119,23 @@ def help():
 def test():
     "Test the fishing algorithm."
     counts = {}
+    for (fish, _, _) in fishes:
+        counts[fish] = 0
     for i in range(10000):
-        (fish, score) = cast_result()
-        if fish in counts:
-            counts[fish] += 1
-        else:
-            counts[fish] = 0
+        (fish, _) = cast_result()
+        counts[fish] += 1
     for fish in counts:
-        print(fish + ": " + str(counts[fish]))
+        print(fish_name(fish) + ": " + str(counts[fish]))
 
 # Fishing commands. Each command comes with its argument
 # count and its function.
-commands = { "register" : (2, register),
-             "fish" : (2, fish),
-             "cast" : (1, cast),
-             "scores" : (1, scores),
-             "quit" : (1, quit),
-             "help" : (1, help),
-             "test" : (1, test) }
+commands = { "register" : (1, register),
+             "fish" : (1, fish),
+             "cast" : (0, cast),
+             "scores" : (0, scores),
+             "quit" : (0, quit),
+             "help" : (0, help),
+             "test" : (0, test) }
 
 # The main loop
 print('Fishing! Please enter fishing commands. "help" for help.')
@@ -146,14 +150,14 @@ while True:
         words = cmd.split()
     if words[0] in commands:
         (nargs, cmd_fun) = commands[words[0]]
-        if len(words) != nargs:
+        if len(words) - 1 != nargs:
             print("Wrong number of arguments to command. Please try again")
             continue
-        if nargs == 1:
+        if nargs == 0:
             cmd_fun()
-        elif nargs == 2:
+        elif nargs == 1:
             cmd_fun(words[1])
         else:
-            raise AssertionError("internal error: bogus argument count")
+            assert False
         continue
     print("Unknown fishing command. Please try again.")
